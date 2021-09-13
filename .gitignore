@@ -13,3 +13,5 @@ npm-debug.log
 yarn-error.log
 /.idea
 /.vscode
+app/Http/Controllers/DevController.php
+resources/views/dev/index.blade.php
