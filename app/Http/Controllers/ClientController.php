@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ImportClients;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -100,7 +101,22 @@ class ClientController extends Controller
 
         // Get file from storage folder
         $uploaded_file = storage_path('client_imports/' . $fileName);
-        $uploaded_data = json_decode(file_get_contents($uploaded_file), true); 
+
+        if($uploaded_file){
+
+            $uploaded_data = json_decode(file_get_contents($uploaded_file), true); 
+            ImportClients::dispatch($uploaded_data,$user_id,$fileName);
+
+            return redirect()->back()->with('success', 'Client import is in progress. Please check the logs for the import status.');
+        }else{
+            return redirect()->back()->withErrors('File upload failed. Please contact the Admin.');
+        }
+
+        exit();
+        
+
+
+
 
         // print_r($uploaded_data);
         // exit();
