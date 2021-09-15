@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
 
 class ClientImport extends Model
 {
@@ -16,4 +17,9 @@ class ClientImport extends Model
         'import_file',
         'user_id',
     ];
+
+    public function users()
+    {
+        return $this->belongsTo(User::class,'user_id','id');
+    }
 }
