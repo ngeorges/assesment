@@ -19,8 +19,8 @@
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-body">
-                        <div class="table-responsive1">
-                            <table class="table table-striped dataTable" id="table-clients" cellspacing="0">
+                        <div class="table-responsive">
+                            <table class="table table-striped dataTable" id="table-clients">
                                 <thead>
                                     <tr>
                                         <th>#</th>
@@ -79,7 +79,5 @@
         });
 
     });
-
 </script>
-
 @stop
