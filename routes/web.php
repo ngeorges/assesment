@@ -20,7 +20,8 @@ Auth::routes();
 Route::get('/', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard.index');
 
 Route::prefix('clients')->group(function () {
-    Route::get('/list', [App\Http\Controllers\ClientController::class, 'list'])->name('clients.list');
+    Route::get('/', [App\Http\Controllers\ClientController::class, 'index'])->name('clients.index');
+    Route::get('/list', [App\Http\Controllers\ClientController::class, 'getClients'])->name('clients.list');
     Route::get('/creditcards', [App\Http\Controllers\ClientController::class, 'creditcards'])->name('clients.creditcards');
     Route::get('/import', [App\Http\Controllers\ClientController::class, 'import_form'])->name('clients.import_form');
     Route::post('/import', [App\Http\Controllers\ClientController::class, 'import_store'])->name('clients.import_store');

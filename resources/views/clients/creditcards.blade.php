@@ -1,5 +1,14 @@
 @extends('layouts.app')
 
+@section('page_css')
+<!-- CSS Libraries -->
+<link rel="stylesheet" href="{{ asset('assets/css/datatables/datatables.min.css') }}">
+<link rel="stylesheet"
+    href="{{ asset('assets/css/datatables/dataTables.bootstrap4.min.css') }}">
+@endsection
+
+@section('title', 'Credit Cards')
+
 @section('content')
     <section class="section">
         <div class="section-header">

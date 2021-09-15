@@ -3,12 +3,12 @@
         <i class=" fas fa-building"></i><span>Dashboard</span>
     </a>
 </li>
-<li class="side-menus {{ Request::is('clients/*') ? 'active' : '' }}">
+<li class="side-menus {{ Request::is('clients/*')||Request::is('clients')  ? 'active' : '' }}">
     <a class="nav-link has-dropdown" href="#">
     <i class="fas fa-address-card"></i><span>Clients</span>
     </a>
     <ul class="dropdown-menu">
-                <li class="{{ Request::is('clients/list') ? 'active' : '' }}"><a class="nav-link" href="/clients/list">List</a></li>
+                <li class="{{ Request::is('clients') ? 'active' : '' }}"><a class="nav-link" href="/clients">List</a></li>
                 <li class="{{ Request::is('clients/creditcards') ? 'active' : '' }}"><a class="nav-link" href="/clients/creditcards">Credit Cards</a></li>
                 <li class="{{ Request::is('clients/import') ? 'active' : '' }}"><a class="nav-link" href="/clients/import">Import</a></li>
                 <li class="{{ Request::is('clients/failed-import') ? 'active' : '' }}"><a class="nav-link" href="/clients/failed-import">Failed Imports</a></li>

@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use App\Models\Client;
 use App\Models\CreditCard;
 use App\Models\ClientImport;
+use DataTables;
 
 class ClientController extends Controller
 {
@@ -19,9 +20,24 @@ class ClientController extends Controller
     }
 
 
-    public function list()
+    public function index()
     {
-        return view('clients.list');
+        return view('clients.index');
+    }
+
+    public function getClients(Request $request)
+    {
+        if ($request->ajax()) {
+            $data = Client::latest()->get();
+            return Datatables::of($data)
+                ->addIndexColumn()
+                ->addColumn('action', function($row){
+                    $actionBtn = '<a href="javascript:void(0)" class="edit btn btn-success btn-sm">Edit</a> <a href="javascript:void(0)" class="delete btn btn-danger btn-sm">Delete</a>';
+                    return $actionBtn;
+                })
+                ->rawColumns(['action'])
+                ->make(true);
+        }
     }
 
     public function creditcards()
