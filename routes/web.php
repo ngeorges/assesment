@@ -26,7 +26,8 @@ Route::prefix('clients')->group(function () {
     Route::get('/creditcards/list', [App\Http\Controllers\ClientController::class, 'getCreditCards'])->name('creditcards.list');
     Route::get('/import', [App\Http\Controllers\ClientController::class, 'import_form'])->name('clients.import_form');
     Route::post('/import', [App\Http\Controllers\ClientController::class, 'import_store'])->name('clients.import_store');
-    Route::get('/failed-import', [App\Http\Controllers\ClientController::class, 'failed_import'])->name('clients.failed_import');
+    Route::get('/import-logs', [App\Http\Controllers\ClientController::class, 'import_logs'])->name('clients.import_logs');
+    Route::get('/import-logs/list', [App\Http\Controllers\ClientController::class, 'getImportLogs'])->name('import.list');
 });
 
 Route::prefix('users')->group(function () {

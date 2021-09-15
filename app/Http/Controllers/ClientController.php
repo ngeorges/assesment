@@ -55,6 +55,21 @@ class ClientController extends Controller
         }
     }
 
+    public function getImportLogs(Request $request)
+    {
+        if ($request->ajax()) {
+            $data = ClientImport::latest()->get();
+            return Datatables::of($data)
+                ->addIndexColumn()
+                ->addColumn('action', function($row){
+                    $actionBtn = '<a href="javascript:void(0)" class="edit btn btn-success btn-sm">Edit</a> <a href="javascript:void(0)" class="delete btn btn-danger btn-sm">Delete</a>';
+                    return $actionBtn;
+                })
+                ->rawColumns(['action'])
+                ->make(true);
+        }
+    }
+
     public function creditcards()
     {
         return view('clients.creditcards');
@@ -158,8 +173,8 @@ class ClientController extends Controller
         }
     }
 
-    public function failed_import()
+    public function import_logs()
     {
-        return view('clients.failed_import');
+        return view('clients.import_logs');
     }
 }

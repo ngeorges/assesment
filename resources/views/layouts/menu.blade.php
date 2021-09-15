@@ -11,7 +11,7 @@
                 <li class="{{ Request::is('clients') ? 'active' : '' }}"><a class="nav-link" href="/clients">List</a></li>
                 <li class="{{ Request::is('clients/creditcards') ? 'active' : '' }}"><a class="nav-link" href="/clients/creditcards">Credit Cards</a></li>
                 <li class="{{ Request::is('clients/import') ? 'active' : '' }}"><a class="nav-link" href="/clients/import">Import</a></li>
-                <li class="{{ Request::is('clients/failed-import') ? 'active' : '' }}"><a class="nav-link" href="/clients/failed-import">Failed Imports</a></li>
+                <li class="{{ Request::is('clients/import-logs') ? 'active' : '' }}"><a class="nav-link" href="/clients/import-logs">Import Logs</a></li>
               </ul>
 </li>
 <li class="side-menus {{ Request::is('users/*') ? 'active' : '' }}">
