@@ -23,6 +23,7 @@ Route::prefix('clients')->group(function () {
     Route::get('/', [App\Http\Controllers\ClientController::class, 'index'])->name('clients.index');
     Route::get('/list', [App\Http\Controllers\ClientController::class, 'getClients'])->name('clients.list');
     Route::get('/creditcards', [App\Http\Controllers\ClientController::class, 'creditcards'])->name('clients.creditcards');
+    Route::get('/creditcards/list', [App\Http\Controllers\ClientController::class, 'getCreditCards'])->name('creditcards.list');
     Route::get('/import', [App\Http\Controllers\ClientController::class, 'import_form'])->name('clients.import_form');
     Route::post('/import', [App\Http\Controllers\ClientController::class, 'import_store'])->name('clients.import_store');
     Route::get('/failed-import', [App\Http\Controllers\ClientController::class, 'failed_import'])->name('clients.failed_import');
