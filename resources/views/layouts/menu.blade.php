@@ -5,7 +5,7 @@
 </li>
 <li class="side-menus {{ Request::is('clients/*') ? 'active' : '' }}">
     <a class="nav-link has-dropdown" href="#">
-        <i class=" fas fa-building"></i><span>Clients</span>
+    <i class="fas fa-address-card"></i><span>Clients</span>
     </a>
     <ul class="dropdown-menu">
                 <li class="{{ Request::is('clients/list') ? 'active' : '' }}"><a class="nav-link" href="/clients/list">List</a></li>
@@ -16,7 +16,7 @@
 </li>
 <li class="side-menus {{ Request::is('users/*') ? 'active' : '' }}">
     <a class="nav-link has-dropdown" href="#">
-        <i class=" fas fa-building"></i><span>Users</span>
+        <i class=" fas fa-user"></i><span>Users</span>
     </a>
     <ul class="dropdown-menu">
                 <li class="{{ Request::is('users/list') ? 'active' : '' }}"><a class="nav-link" href="/users/list">List</a></li>
