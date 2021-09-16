@@ -40,14 +40,18 @@ class ImportClients implements ShouldQueue
     {
 
         foreach ($this->uploaded_data as $clientObj) {
-            // Create Clients
-            $clientObj['date_of_birth'] = date('Y-m-d H:i:s', strtotime($clientObj['date_of_birth'])); // Format date of birth
-            // Client::create($clientObj);
 
-            $age = Carbon::parse(date('Y-m-d', strtotime($clientObj['date_of_birth'])))->age;
+            // Get Client age
+            if ($clientObj['date_of_birth']) {
+                // Convert date of birth
+                $clientObj['date_of_birth'] = date('Y-m-d H:i:s', strtotime($clientObj['date_of_birth'])); // Format date of birth
+                $age = Carbon::parse(date('Y-m-d', strtotime($clientObj['date_of_birth'])))->age;
+            } else {
+                $age = null;
+            }
 
             // Check if client age is between 18 and 65
-            if ($age > 17 || $age < 66){
+            if (($age > 17 && $age < 66) || $age == null) {
                 $client = Client::updateOrCreate(
                     [
                         'email' => $clientObj['email'],
@@ -62,12 +66,12 @@ class ImportClients implements ShouldQueue
                         'account' => $clientObj['account'],
                     ]
                 );
-    
+
                 // Create Credit Cards
                 $creditCardObj = $clientObj['credit_card'];
                 $creditCardObj['account'] = $clientObj['account']; // Add client account to Credit Card Array
                 // CreditCard::create($creditCardObj);
-    
+
                 $creditCard = CreditCard::updateOrCreate(
                     [
                         'type' => $creditCardObj['type'],
@@ -79,26 +83,24 @@ class ImportClients implements ShouldQueue
                         'expirationDate' => $creditCardObj['expirationDate'],
                     ]
                 );
-    
+
                 if (!$client->wasRecentlyCreated && $client->wasChanged()) {
                     // updateOrCreate performed an update
                     // $update_client_count++;
-    
+
                     // TO-DO: Count client updates
                     // ClientImport::find($this->clientImportId)->increment('client_update_count');
-    
+
                 }
-    
+
                 // Count imported records
                 $clientImport = ClientImport::find($this->clientImportId);
                 $clientImport->import_count = $clientImport->import_count + 1;
                 $clientImport->save();
 
-            }else{
+            } else {
                 // TO-DO: Count the records that where skiped becuase of client age
             }
-
-
 
         }
     }
