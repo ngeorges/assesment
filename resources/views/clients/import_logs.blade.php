@@ -26,8 +26,10 @@
                                         <th>Found</th>
                                         <th>Imported</th>
                                         <th>Attempts</th>
-                                        <th>File</th>                  
-                                        <th>Imported By</th>                       
+                                        <th>File</th> 
+                                        <th>Status</th>                 
+                                        <th>Imported By</th>      
+                                        <th>Date</th>             
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -74,8 +76,15 @@
                     data: 'import_file',
                     name: 'import_file'
                 },
+                {
+                    data: 'status',
+                    name: 'status'
+                },
                 {   data: 'users', 
                     name: 'users.name'
+                },
+                {   data: 'date', 
+                    name: 'date'
                 },
                 {
                     data: 'action',

@@ -18,6 +18,7 @@ class ImportClients implements ShouldQueue
 
     public $uploaded_data;
     public $clientImportId;
+    public $queueImport;
 
     /**
      * Create a new job instance.
@@ -25,10 +26,11 @@ class ImportClients implements ShouldQueue
      * @return void
      */
 
-    public function __construct($uploaded_data, $clientImportId)
+    public function __construct($uploaded_data, $clientImportId, $queueImport = null)
     {
         $this->uploaded_data = $uploaded_data;
         $this->clientImportId = $clientImportId;
+        $this->queueImport = $queueImport;
     }
 
     /**
@@ -39,7 +41,8 @@ class ImportClients implements ShouldQueue
     public function handle()
     {
 
-        foreach ($this->uploaded_data as $clientObj) {
+        // foreach ($this->uploaded_data as $clientObj) {
+        foreach (array_slice($this->uploaded_data, $this->queueImport) as $clientObj) {
 
             // Get Client age
             if ($clientObj['date_of_birth']) {
@@ -49,6 +52,8 @@ class ImportClients implements ShouldQueue
             } else {
                 $age = null;
             }
+
+            $clientImport = ClientImport::find($this->clientImportId);
 
             // Check if client age is between 18 and 65
             if (($age > 17 && $age < 66) || $age == null) {
@@ -84,6 +89,10 @@ class ImportClients implements ShouldQueue
                     ]
                 );
 
+    
+                    
+        
+
                 if (!$client->wasRecentlyCreated && $client->wasChanged()) {
                     // updateOrCreate performed an update
                     // $update_client_count++;
@@ -94,12 +103,23 @@ class ImportClients implements ShouldQueue
                 }
 
                 // Count imported records
-                $clientImport = ClientImport::find($this->clientImportId);
                 $clientImport->import_count = $clientImport->import_count + 1;
                 $clientImport->save();
 
             } else {
-                // TO-DO: Count the records that where skiped becuase of client age
+                // Count skiped records
+                $clientImport->import_skiped = $clientImport->import_skiped + 1;
+                $clientImport->save();
+            }
+
+            // Track record queue 
+            $clientImport->queue = $clientImport->queue + 1;
+            $clientImport->save();
+
+            // Check if all records have been queued
+            if($clientImport->read_count == $clientImport->queue){
+                $clientImport->status = 1;
+                $clientImport->save(); 
             }
 
         }

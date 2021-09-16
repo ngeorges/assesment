@@ -62,11 +62,22 @@ class ClientController extends Controller
                 ->addColumn('users', function (ClientImport $clientImport) {
                     return $clientImport->users->name;
                 })
+                ->addColumn('status', function ($row) {
+                    if($row->status == '1'){
+                        $status = '<span class="badge badge-success">complete</span>';
+                    }else{
+                        $status = '<span class="badge badge-danger">incomplete</span>';
+                    }
+                    return $status;
+                })
+                ->addColumn('date', function ($row) {
+                    return $row->created_at;
+                })
                 ->addColumn('action', function ($row) {
                     $actionBtn = '<a href="javascript:void(0)" class="edit btn btn-success btn-sm">Re-Import</a> <a href="javascript:void(0)" class="delete btn btn-danger btn-sm">Delete</a>';
                     return $actionBtn;
                 })
-                ->rawColumns(['action'])
+                ->rawColumns(['action','status'])
                 ->make(true);
         }
     }

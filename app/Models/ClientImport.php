@@ -13,7 +13,10 @@ class ClientImport extends Model
     protected $fillable = [
         'read_count',
         'import_count',
+        'queue',
+        'import_skiped',
         'import_attempts',
+        'status',
         'import_file',
         'user_id',
     ];
