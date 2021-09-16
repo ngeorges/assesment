@@ -3,10 +3,10 @@
 namespace App\Jobs;
 
 use App\Models\Client;
-use App\Models\CreditCard;
 use App\Models\ClientImport;
+use App\Models\CreditCard;
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -17,8 +17,7 @@ class ImportClients implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $uploaded_data;
-    public $user_id;
-    public $fileName;
+    public $clientImportId;
 
     /**
      * Create a new job instance.
@@ -26,11 +25,10 @@ class ImportClients implements ShouldQueue
      * @return void
      */
 
-    public function __construct($uploaded_data, $user_id, $fileName)
+    public function __construct($uploaded_data, $clientImportId)
     {
         $this->uploaded_data = $uploaded_data;
-        $this->user_id = $user_id;
-        $this->fileName = $fileName;
+        $this->clientImportId = $clientImportId;
     }
 
     /**
@@ -40,69 +38,68 @@ class ImportClients implements ShouldQueue
      */
     public function handle()
     {
-        //
-        $read_count = count($this->uploaded_data); // Count records in file
-        $import_count = 0;
-        $update_client_count = 0;
-
-        // Log Import
-        $clientImport = ClientImport::create([
-            'read_count' => $read_count,
-            'import_count' => '0',
-            'import_attempts' => '1',
-            'import_file' => $this->fileName,
-            'user_id' => $this->user_id
-        ]);
-
-        $clientImportId = $clientImport->id;
 
         foreach ($this->uploaded_data as $clientObj) {
             // Create Clients
             $clientObj['date_of_birth'] = date('Y-m-d H:i:s', strtotime($clientObj['date_of_birth'])); // Format date of birth
             // Client::create($clientObj);
 
-            $client = Client::updateOrCreate(
-                [
-                    'email' => $clientObj['email']
-                ],
-                [
-                    'name' => $clientObj['name'],
-                    'address' => $clientObj['address'],
-                    'checked' => $clientObj['checked'],
-                    'description' => $clientObj['description'],
-                    'interest' => $clientObj['interest'],
-                    'date_of_birth' => $clientObj['date_of_birth'],
-                    'account' => $clientObj['account'],
-                ]
-            );
+            $age = Carbon::parse(date('Y-m-d', strtotime($clientObj['date_of_birth'])))->age;
 
-            // Create Credit Cards
-            $creditCardObj = $clientObj['credit_card'];
-            $creditCardObj['account'] = $clientObj['account']; // Add client account to Credit Card Array
-            // CreditCard::create($creditCardObj); 
+            // Check if client age is between 18 and 65
+            if ($age > 17 || $age < 66){
+                $client = Client::updateOrCreate(
+                    [
+                        'email' => $clientObj['email'],
+                    ],
+                    [
+                        'name' => $clientObj['name'],
+                        'address' => $clientObj['address'],
+                        'checked' => $clientObj['checked'],
+                        'description' => $clientObj['description'],
+                        'interest' => $clientObj['interest'],
+                        'date_of_birth' => $clientObj['date_of_birth'],
+                        'account' => $clientObj['account'],
+                    ]
+                );
+    
+                // Create Credit Cards
+                $creditCardObj = $clientObj['credit_card'];
+                $creditCardObj['account'] = $clientObj['account']; // Add client account to Credit Card Array
+                // CreditCard::create($creditCardObj);
+    
+                $creditCard = CreditCard::updateOrCreate(
+                    [
+                        'type' => $creditCardObj['type'],
+                        'number' => $creditCardObj['number'],
+                    ],
+                    [
+                        'name' => $creditCardObj['name'],
+                        'account' => $creditCardObj['account'],
+                        'expirationDate' => $creditCardObj['expirationDate'],
+                    ]
+                );
+    
+                if (!$client->wasRecentlyCreated && $client->wasChanged()) {
+                    // updateOrCreate performed an update
+                    // $update_client_count++;
+    
+                    // TO-DO: Count client updates
+                    // ClientImport::find($this->clientImportId)->increment('client_update_count');
+    
+                }
+    
+                // Count imported records
+                $clientImport = ClientImport::find($this->clientImportId);
+                $clientImport->import_count = $clientImport->import_count + 1;
+                $clientImport->save();
 
-            $creditCard = CreditCard::updateOrCreate(
-                [
-                    'type' => $creditCardObj['type'],
-                    'number' => $creditCardObj['number']
-                ],
-                [
-                    'name' => $creditCardObj['name'],
-                    'account' => $creditCardObj['account'],
-                    'expirationDate' => $creditCardObj['expirationDate'],
-                ]
-            );
-
-
-            if(!$client->wasRecentlyCreated && $client->wasChanged()){
-                // updateOrCreate performed an update
-                $update_client_count++;
+            }else{
+                // TO-DO: Count the records that where skiped becuase of client age
             }
-            
-            $import_count++; // Count imported records
 
-            $clientImport->import_count = $import_count;
-            $clientImport->save();
+
+
         }
     }
 }

@@ -3,14 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\ImportClients;
+use App\Models\Client;
+use App\Models\ClientImport;
+use App\Models\CreditCard;
+use DataTables;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-use Carbon\Carbon;
-use App\Models\Client;
-use App\Models\CreditCard;
-use App\Models\ClientImport;
-use DataTables;
 
 class ClientController extends Controller
 {
@@ -19,7 +17,6 @@ class ClientController extends Controller
     {
         $this->middleware('auth');
     }
-
 
     public function index()
     {
@@ -32,7 +29,7 @@ class ClientController extends Controller
             $data = Client::latest()->get();
             return Datatables::of($data)
                 ->addIndexColumn()
-                ->addColumn('action', function($row){
+                ->addColumn('action', function ($row) {
                     $actionBtn = '<a href="javascript:void(0)" class="edit btn btn-success btn-sm">Edit</a> <a href="javascript:void(0)" class="delete btn btn-danger btn-sm">Delete</a>';
                     return $actionBtn;
                 })
@@ -47,7 +44,7 @@ class ClientController extends Controller
             $data = CreditCard::latest()->get();
             return Datatables::of($data)
                 ->addIndexColumn()
-                ->addColumn('action', function($row){
+                ->addColumn('action', function ($row) {
                     $actionBtn = '<a href="javascript:void(0)" class="edit btn btn-success btn-sm">Edit</a> <a href="javascript:void(0)" class="delete btn btn-danger btn-sm">Delete</a>';
                     return $actionBtn;
                 })
@@ -65,7 +62,7 @@ class ClientController extends Controller
                 ->addColumn('users', function (ClientImport $clientImport) {
                     return $clientImport->users->name;
                 })
-                ->addColumn('action', function($row){
+                ->addColumn('action', function ($row) {
                     $actionBtn = '<a href="javascript:void(0)" class="edit btn btn-success btn-sm">Re-Import</a> <a href="javascript:void(0)" class="delete btn btn-danger btn-sm">Delete</a>';
                     return $actionBtn;
                 })
@@ -102,25 +99,33 @@ class ClientController extends Controller
         // Get file from storage folder
         $uploaded_file = storage_path('client_imports/' . $fileName);
 
-        if($uploaded_file){
+        if ($uploaded_file) {
 
-            $uploaded_data = json_decode(file_get_contents($uploaded_file), true); 
-            ImportClients::dispatch($uploaded_data,$user_id,$fileName);
+            $uploaded_chunk = json_decode(file_get_contents($uploaded_file), true);
+
+            // Log Import
+            $clientImport = ClientImport::create([
+                'read_count' => count($uploaded_chunk),
+                'import_count' => '0',
+                'import_attempts' => '1',
+                'import_file' => $fileName,
+                'user_id' => $user_id,
+            ]);
+
+            $clientImportId = $clientImport->id;
+
+            foreach (array_chunk($uploaded_chunk, 500) as $uploaded_data) {
+                ImportClients::dispatch($uploaded_data, $clientImportId);
+            }
 
             return redirect()->back()->with('success', 'Client import is in progress. Please check the logs for the import status.');
-        }else{
+        } else {
             return redirect()->back()->withErrors('File upload failed. Please contact the Admin.');
         }
 
-        exit();
-        
-
-
-
-
         // print_r($uploaded_data);
         // exit();
-        
+
         $read_count = count($uploaded_data); // Count records in file
         $import_count = 0;
         $update_client_count = 0;
@@ -131,7 +136,7 @@ class ClientController extends Controller
             'import_count' => '0',
             'import_attempts' => '1',
             'import_file' => $fileName,
-            'user_id' => $user_id
+            'user_id' => $user_id,
         ]);
 
         $clientImportId = $clientImport->id;
@@ -143,7 +148,7 @@ class ClientController extends Controller
 
             $client = Client::updateOrCreate(
                 [
-                    'email' => $clientObj['email']
+                    'email' => $clientObj['email'],
                 ],
                 [
                     'name' => $clientObj['name'],
@@ -159,12 +164,12 @@ class ClientController extends Controller
             // Create Credit Cards
             $creditCardObj = $clientObj['credit_card'];
             $creditCardObj['account'] = $clientObj['account']; // Add client account to Credit Card Array
-            // CreditCard::create($creditCardObj); 
+            // CreditCard::create($creditCardObj);
 
             $creditCard = CreditCard::updateOrCreate(
                 [
                     'type' => $creditCardObj['type'],
-                    'number' => $creditCardObj['number']
+                    'number' => $creditCardObj['number'],
                 ],
                 [
                     'name' => $creditCardObj['name'],
@@ -173,22 +178,21 @@ class ClientController extends Controller
                 ]
             );
 
-
-            if(!$client->wasRecentlyCreated && $client->wasChanged()){
+            if (!$client->wasRecentlyCreated && $client->wasChanged()) {
                 // updateOrCreate performed an update
                 $update_client_count++;
             }
-            
+
             $import_count++; // Count imported records
 
             $clientImport->import_count = $import_count;
             $clientImport->save();
         }
 
-        if($read_count == $import_count){
-            return redirect()->back()->with('success', 'Imported all '.$import_count.' records succesfully with '.$update_client_count.' Client update(s)');
-        }else{
-            return redirect()->back()->withErrors('Only imported '.$import_count.' out of '.$read_count.' records with '.$update_client_count.' Client update(s)');
+        if ($read_count == $import_count) {
+            return redirect()->back()->with('success', 'Imported all ' . $import_count . ' records succesfully with ' . $update_client_count . ' Client update(s)');
+        } else {
+            return redirect()->back()->withErrors('Only imported ' . $import_count . ' out of ' . $read_count . ' records with ' . $update_client_count . ' Client update(s)');
         }
     }
 
