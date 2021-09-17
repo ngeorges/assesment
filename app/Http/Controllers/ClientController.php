@@ -9,6 +9,12 @@ use App\Models\CreditCard;
 use DataTables;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Bus\Batch;
+use Illuminate\Support\Facades\Bus;
+use Throwable;
+use Illuminate\Support\Facades\Log;
+
+
 
 class ClientController extends Controller
 {
@@ -63,10 +69,12 @@ class ClientController extends Controller
                     return $clientImport->users->name;
                 })
                 ->addColumn('status', function ($row) {
-                    if($row->status == '1'){
-                        $status = '<span class="badge badge-success">complete</span>';
+                    if($row->status){
+                        $statusBadge = json_decode($row->status, true);
+                        $status = '<span class="badge badge-'.$statusBadge['type'].'">'.$statusBadge['value'].'</span>';
                     }else{
-                        $status = '<span class="badge badge-danger">incomplete</span>';
+                        // $status = '<span class="badge badge-danger">incomplete</span>';
+                        $status = '<span class="badge badge-danger">NULL</span>';
                     }
                     return $status;
                 })
@@ -119,14 +127,34 @@ class ClientController extends Controller
                 'read_count' => count($uploaded_chunk),
                 'import_count' => '0',
                 'import_attempts' => '1',
+                'status' => json_encode(['type' => 'info','value' => 'pending']),
                 'import_file' => $fileName,
                 'user_id' => $user_id,
             ]);
 
+            // $clientImport->status = ['type' => 'info','value' => 'pending'];
+            // $clientImport->save();
             $clientImportId = $clientImport->id;
 
+            $batch = Bus::batch([])->then(function (Batch $batch) use ($clientImport){
+                // All jobs completed successfully...
+                $clientImport->status = ['type' => 'success','value' => 'complete'];
+                $clientImport->save();
+                Log::notice('All jobs completed successfully');
+            })->catch(function (Batch $batch, Throwable $e) use ($clientImport){
+                // First batch job failure detected...
+                $clientImport->status = ['type' => 'danger','value' => 'failed'];
+                $clientImport->save();
+                Log::notice('First batch job failure detected');
+            })->finally(function (Batch $batch) {
+                // The batch has finished executing...
+                Log::notice('The batch has finished executing');
+
+            })->dispatch();
+
             foreach (array_chunk($uploaded_chunk, 500) as $uploaded_data) {
-                ImportClients::dispatch($uploaded_data, $clientImportId);
+                // ImportClients::dispatch($uploaded_data, $clientImportId);
+                $batch->add(new ImportClients($uploaded_data, $clientImportId));
             }
 
             return redirect()->back()->with('success', 'Client import is in progress. Please check the logs for the import status.');

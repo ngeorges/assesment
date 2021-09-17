@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\ClientImport;
 use App\Models\CreditCard;
 use Carbon\Carbon;
+use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -14,7 +15,7 @@ use Illuminate\Queue\SerializesModels;
 
 class ImportClients implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $uploaded_data;
     public $clientImportId;
@@ -44,6 +45,10 @@ class ImportClients implements ShouldQueue
         // foreach ($this->uploaded_data as $clientObj) {
         foreach (array_slice($this->uploaded_data, $this->queueImport) as $clientObj) {
 
+            $clientImport = ClientImport::find($this->clientImportId);
+            $clientImport->status = ['type' => 'primary','value' => 'running'];
+            $clientImport->save();
+
             // Get Client age
             if ($clientObj['date_of_birth']) {
                 // Convert date of birth
@@ -53,7 +58,6 @@ class ImportClients implements ShouldQueue
                 $age = null;
             }
 
-            $clientImport = ClientImport::find($this->clientImportId);
 
             // Check if client age is between 18 and 65
             if (($age > 17 && $age < 66) || $age == null) {
@@ -118,8 +122,10 @@ class ImportClients implements ShouldQueue
 
             // Check if all records have been queued
             if($clientImport->read_count == $clientImport->queue){
-                $clientImport->status = 1;
-                $clientImport->save(); 
+                // $clientImport->status = 1;
+                // $clientImport->save();
+                // $clientImport->status = ['type' => 'success','value' => 'complete'];
+                // $clientImport->save(); 
             }
 
         }
